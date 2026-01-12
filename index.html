@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>STRANGER THINGS - ESCAPE OR PERISH</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
+    body {
+      background: radial-gradient(circle at 30% 20%, #8B0000 0%, #1a0000 30%, #000 70%);
+      min-height: 100vh; color: #FF1744; overflow-x: hidden; position: relative;
+      padding: 10px;
+    }
+    body::before {
+      content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(255, 23, 68, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 0, 0, 0.3) 0%, transparent 50%);
+      animation: hellFlicker 4s infinite; z-index: -1;
+    }
+    @keyframes hellFlicker {
+      0%, 100% { opacity: 0.9; }
+      20% { opacity: 0.6; }
+      40%, 60% { opacity: 1; }
+      80% { opacity: 0.7; }
+    }
+    
+    .wrapper { 
+      width: 95%; max-width: 900px; margin: 0 auto; padding: 30px;
+      background: rgba(15, 0, 0, 0.98); border: 4px solid #FF1744; 
+      border-radius: 8px; box-shadow: 0 0 80px #FF1744, inset 0 0 60px rgba(255, 23, 68, 0.1);
+      position: relative; min-height: 100vh; display: flex; flex-direction: column;
+    }
+    
+    .title { 
+      text-align: center; font-size: clamp(2em, 5vw, 3.5em); color: #FF1744; 
+      text-shadow: 0 0 50px #FF1744, 0 0 100px #FF1744; margin-bottom: 15px; 
+      letter-spacing: 4px; animation: titlePulse 3s infinite;
+      padding: 0 10px;
+    }
+    @keyframes titlePulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.02); }
+    }
+    
+    .subtitle { 
+      text-align: center; color: #FF5722; font-size: clamp(1.1em, 3vw, 1.4em); 
+      text-shadow: 0 0 25px #FF5722; margin-bottom: 20px; letter-spacing: 2px;
+      padding: 0 10px;
+    }
+    
+    .attempts-left {
+      text-align: center; background: rgba(139,0,0,0.9); padding: 15px;
+      border: 3px solid #FF1744; margin: 20px 0; border-radius: 10px;
+      box-shadow: 0 0 30px rgba(255,23,68,0.6);
+    }
+    .attempts-left span {
+      font-size: clamp(2em, 6vw, 2.8em); color: #FF1744; text-shadow: 0 0 20px #FF1744;
+      font-weight: bold; display: block; animation: countdownBlink 1s infinite;
+    }
+    @keyframes countdownBlink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.4; }
+    }
+    
+    .input-field {
+      width: 100%; height: 70px; border: 4px solid #FF1744; border-radius: 12px;
+      background: rgba(0,0,0,1); color: #FF1744; font-size: clamp(1.2em, 4vw, 1.6em); 
+      padding: 0 25px; outline: none; text-shadow: 0 0 20px #FF1744; 
+      transition: all 0.3s; font-family: inherit; letter-spacing: 1px;
+      margin-bottom: 20px; box-shadow: inset 0 0 30px rgba(255,23,68,0.2);
+    }
+    .input-field:focus { 
+      border-color: #FF5722; box-shadow: 0 0 60px #FF5722, inset 0 0 40px rgba(255,87,34,0.3);
+      transform: scale(1.01);
+    }
+    
+    .typing-text {
+      height: 220px; background: rgba(8,0,0,0.95); border: 3px solid #FF1744; 
+      border-radius: 12px; padding: 25px; font-size: clamp(1.2em, 3.5vw, 1.6em); 
+      line-height: 1.8; overflow-y: auto; margin: 20px 0; 
+      box-shadow: inset 0 0 40px rgba(255,23,68,0.3);
+      min-height: 200px;
+    }
+    .typing-text span.correct { color: #FF1744; text-shadow: 0 0 25px #FF1744; }
+    .typing-text span.incorrect { 
+      color: #990000; background: rgba(153,0,0,0.7); animation: errorShake 0.4s; 
+      text-shadow: 0 0 10px #990000;
+    }
+    @keyframes errorShake {
+      0%, 100% { transform: translateX(0) rotate(0deg); }
+      25% { transform: translateX(-3px) rotate(-1deg); }
+      75% { transform: translateX(3px) rotate(1deg); }
+    }
+    .typing-text span.untouched { color: #666; }
+    
+    .stats { 
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+      gap: 20px; list-style: none; margin: 25px 0; padding: 0 10px;
+    }
+    .stats li {
+      background: rgba(255,23,68,0.25); padding: 20px; border-radius: 12px; 
+      text-align: center; border: 3px solid rgba(255,23,68,0.6);
+      box-shadow: 0 0 25px rgba(255,23,68,0.4);
+    }
+    .stats p { color: #FF5722; font-size: clamp(0.9em, 2.5vw, 1em); margin-bottom: 8px; }
+    .stats span { font-size: clamp(1.8em, 5vw, 2.5em); font-weight: bold; color: #FF1744; text-shadow: 0 0 25px #FF1744; }
+    .accuracy { grid-column: 1 / -1; background: rgba(255,87,34,0.4); border-color: #FF5722; }
+    .accuracy span { color: #FF5722; text-shadow: 0 0 25px #FF5722; }
+    
+    .btn {
+      width: 100%; padding: 22px; background: linear-gradient(45deg, #FF1744, #CC0000); 
+      color: white; border: none; border-radius: 15px; font-size: clamp(1.2em, 3.5vw, 1.5em); 
+      font-weight: bold; cursor: pointer; transition: all 0.4s; text-transform: uppercase; 
+      letter-spacing: 3px; font-family: inherit; text-shadow: 0 0 15px #FF1744;
+      box-shadow: 0 0 30px rgba(255,23,68,0.5); margin-top: auto;
+    }
+    .btn:hover { 
+      transform: translateY(-5px) scale(1.02); 
+      box-shadow: 0 20px 50px rgba(255,23,68,0.8);
+      background: linear-gradient(45deg, #FF5722, #FF1744);
+    }
+    
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.98); z-index: 1000; justify-content: center; align-items: center;
+      padding: 20px;
+    }
+    .modal-content {
+      background: linear-gradient(135deg, #300000, #500000); border: 5px solid #FF1744;
+      padding: 50px 40px; border-radius: 20px; text-align: center; max-width: 95vw;
+      max-height: 90vh; overflow-y: auto; box-shadow: 0 0 100px rgba(255,23,68,0.9);
+      position: relative; width: 100%;
+    }
+    .modal-content::before {
+      content: 'Anamigay'; position: absolute; top: 15px; right: 25px;
+      font-size: 12px; color: rgba(255,255,255,0.6); font-family: 'Courier New', monospace;
+      letter-spacing: 2px; text-shadow: 0 0 8px rgba(255,255,255,0.8); z-index: 10;
+      font-weight: bold;
+    }
+    .keycode {
+      font-size: clamp(4em, 12vw, 7em); font-family: 'Courier New', monospace; 
+      background: rgba(0,0,0,0.95); color: #00FF88; padding: 25px 30px; 
+      border: 5px solid #00FF88; border-radius: 15px; margin: 30px 0; 
+      text-shadow: 0 0 50px #00FF88; letter-spacing: clamp(8px, 2vw, 15px);
+      box-shadow: 0 0 80px #00FF88; animation: victoryPulse 1.5s infinite;
+      max-width: 90%;
+    }
+    @keyframes victoryPulse {
+      0%, 100% { box-shadow: 0 0 80px #00FF88; transform: scale(1); }
+      50% { box-shadow: 0 0 120px #00FF88; transform: scale(1.03); }
+    }
+    
+    @media (max-width: 768px) {
+      .wrapper { padding: 20px; margin: 5px; }
+      .typing-text { height: 180px; padding: 20px; }
+      .stats { gap: 15px; }
+      .stats li { padding: 15px; }
+      .modal-content { padding: 30px 20px; margin: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h1 class="title">STRANGER THINGS</h1>
+    <h2 class="subtitle">ONLY 5 ATTEMPTS TO ESCAPE</h2>
+    
+    <div class="attempts-left">
+      <span id="attemptsLeft">5</span>
+      <div style="font-size: clamp(1em, 3vw, 1.1em); color: #FF5722; margin-top: 8px;">ATTEMPTS REMAINING</div>
+    </div>
+    
+    <input type="text" class="input-field" id="input" placeholder="TYPE OR PERISH - NO COPY/PASTE" readonly>
+    
+    <div class="typing-text" id="quote"></div>
+    
+    <ul class="stats">
+      <li><p>Time</p><span id="timer">60s</span></li>
+      <li><p>Errors</p><span id="errors">0</span></li>
+      <li><p>WPM</p><span id="wpm">0</span></li>
+      <li><p>CPM</p><span id="cpm">0</span></li>
+      <li class="accuracy"><p>Accuracy</p><span id="accuracy">100%</span></li>
+    </ul>
+    
+    <button class="btn" id="startBtn" onclick="init()">RISK ESCAPE</button>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle" style="color: #FF1744; margin-bottom: 25px; font-size: clamp(2em, 6vw, 2.5em);">FAILED</h2>
+      <div class="final-stats" style="margin: 25px 0; font-size: clamp(1.1em, 3vw, 1.4em);">
+        <div><strong>Final WPM:</strong> <span id="finalWPM">0</span></div>
+        <div><strong>Final Accuracy:</strong> <span id="finalAccuracy">0%</span></div>
+      </div>
+      <div class="keycode" id="code" style="display: none;">ESCAPE GRANTED</div>
+      <p id="modalText" style="color: #FF5722; margin: 30px 0; font-size: clamp(1.1em, 3vw, 1.3em);">YOU ARE DOOMED</p>
+      <button class="btn" id="nextBtn" onclick="init()" style="width: 100%; max-width: 300px;">DESPERATE ATTEMPT</button>
+    </div>
+  </div>
+
+  <script>
+    const quote = "Friends dont lie Eleven Upside Down Demogorgon Hawkins Lab Eggos Mind Flayer";
+    const chars = quote.split('');
+    const totalChars = chars.length;
+    
+    let time = 60;
+    let timerId = null;
+    let currentErrors = 0;
+    let gameRunning = false;
+    let gameEnded = false;
+    let startTime = 0;
+    let attemptsLeft = 5;
+    
+    const input = document.getElementById('input');
+    const quoteEl = document.getElementById('quote');
+    
+    ['paste', 'copy', 'cut', 'dragstart', 'selectstart', 'contextmenu', 'drop'].forEach(event => {
+      input.addEventListener(event, e => e.preventDefault());
+    });
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey && (e.key === 'a' || e.key === 'c' || e.key === 'v' || e.key === 'x')) {
+        e.preventDefault();
+      }
+      if (e.key === 'F12') e.preventDefault();
+    });
+    
+    function init() {
+      time = 60;
+      currentErrors = 0;
+      gameRunning = false;
+      gameEnded = false;
+      input.value = '';
+      input.readOnly = false;
+      document.getElementById('modal').style.display = 'none';
+      
+      quoteEl.innerHTML = '';
+      chars.forEach((char, i) => {
+        const span = document.createElement('span');
+        span.textContent = char;
+        span.id = `char-${i}`;
+        span.className = 'untouched';
+        quoteEl.appendChild(span);
+      });
+      
+      updateDisplay();
+      document.getElementById('attemptsLeft').textContent = attemptsLeft;
+      input.focus();
+      document.getElementById('startBtn').textContent = 'RISK ESCAPE';
+    }
+    
+    input.addEventListener('input', () => {
+      if (gameEnded || input.readOnly || currentErrors > 10) return;
+      
+      if (!gameRunning) {
+        gameRunning = true;
+        startTime = Date.now();
+        startTimer();
+      }
+      
+      const typed = input.value;
+      currentErrors = 0;
+      
+      chars.forEach((char, i) => {
+        const span = document.getElementById(`char-${i}`);
+        if (i < typed.length) {
+          if (typed[i] === char) {
+            span.className = 'correct';
+          } else {
+            span.className = 'incorrect';
+            currentErrors++;
+          }
+        } else {
+          span.className = 'untouched';
+        }
+      });
+      
+      if (typed.length >= totalChars || time <= 0 || currentErrors > 10) {
+        endGame();
+      }
+      
+      updateDisplay();
+    });
+    
+    function startTimer() {
+      if (timerId) clearInterval(timerId);
+      timerId = setInterval(() => {
+        time--;
+        document.getElementById('timer').textContent = time + 's';
+        if (time <= 0 || currentErrors > 10) {
+          endGame();
+        }
+        updateDisplay();
+      }, 1000);
+    }
+    
+    function endGame() {
+      if (gameEnded) return;
+      gameEnded = true;
+      gameRunning = false;
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+      input.readOnly = true;
+      
+      const elapsed = Math.max(1, Math.round((Date.now() - startTime) / 1000));
+      const finalWPM = Math.round((input.value.length / 5) * (60 / elapsed));
+      const accuracy = input.value.length > 0 ? Math.round(((input.value.length - currentErrors) / input.value.length) * 100) : 0;
+      
+      document.getElementById('finalWPM').textContent = finalWPM;
+      document.getElementById('finalAccuracy').textContent = accuracy + '%';
+      
+      const validRun = currentErrors <= 10;
+      
+      if (!validRun) {
+        document.getElementById('modalTitle').textContent = 'DISCARDED - TOO MANY ERRORS';
+        document.getElementById('modalTitle').style.color = '#666';
+        document.getElementById('modalText').textContent = 'Maximum 10 errors allowed. START OVER.';
+      } else if (finalWPM >= 35 && accuracy >= 95) {
+        document.getElementById('code').style.display = 'block';
+        document.getElementById('code').textContent = 'ESCAPE GRANTED';
+        document.getElementById('modalTitle').textContent = 'VICTORY - YOU ESCAPED!';
+        document.getElementById('modalTitle').style.color = '#00FF88';
+        document.getElementById('modalText').innerHTML = 'The Upside Down cannot hold you. Freedom achieved.';
+        attemptsLeft = 5;
+      } else {
+        attemptsLeft--;
+        document.getElementById('modalTitle').textContent = 'TRAPPED FOREVER';
+        document.getElementById('modalText').innerHTML = 
+          `Attempts left: ${attemptsLeft}<br>Need 35+ WPM & 95%+ accuracy (≤10 errors)`;
+        
+        if (attemptsLeft <= 2) {
+          document.getElementById('modalText').innerHTML += '<br><strong>YOUR TIME IS RUNNING OUT</strong>';
+        }
+      }
+      
+      setTimeout(() => {
+        document.getElementById('modal').style.display = 'flex';
+      }, 600);
+    }
+    
+    function updateDisplay() {
+      const elapsed = gameRunning ? Math.round((Date.now() - startTime) / 1000) : 0;
+      const cpm = elapsed > 0 ? Math.round(input.value.length * 60 / elapsed) : 0;
+      const wpm = elapsed > 0 ? Math.round((input.value.length / 5) * 60 / elapsed) : 0;
+      const accuracy = input.value.length > 0 ? Math.round(((input.value.length - currentErrors) / input.value.length) * 100) : 100;
+      
+      document.getElementById('errors').textContent = currentErrors;
+      document.getElementById('cpm').textContent = cpm;
+      document.getElementById('wpm').textContent = wpm;
+      document.getElementById('accuracy').textContent = accuracy + '%';
+    }
+    
+    window.onload = init;
+  </script>
+</body>
+</html>
+
