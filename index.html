@@ -6,233 +6,511 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
+    
     body {
-      background: radial-gradient(circle at 30% 20%, #8B0000 0%, #1a0000 30%, #000 70%);
+      background-color: #000;
+      /* Deep Red "Upside Down" Background */
+      background-image: radial-gradient(circle at 50% 30%, #400000 0%, #150000 60%, #000 95%);
       min-height: 100vh; color: #FF1744; overflow-x: hidden; position: relative;
       padding: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
+
+    /* --- ATMOSPHERE: FLICKER OVERLAY --- */
     body::before {
       content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: 
-        radial-gradient(circle at 20% 80%, rgba(255, 23, 68, 0.4) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(139, 0, 0, 0.3) 0%, transparent 50%);
-      animation: hellFlicker 4s infinite; z-index: -1;
+        radial-gradient(circle at 30% 70%, rgba(255, 20, 20, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 70% 30%, rgba(100, 0, 0, 0.08) 0%, transparent 40%);
+      animation: hellFlicker 6s infinite alternate; z-index: -1;
+      pointer-events: none;
     }
+
     @keyframes hellFlicker {
-      0%, 100% { opacity: 0.9; }
-      20% { opacity: 0.6; }
-      40%, 60% { opacity: 1; }
-      80% { opacity: 0.7; }
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 0.6; }
+    }
+
+    /* --- JS CONTROLLED LIGHTNING --- */
+    #lightning-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 5; pointer-events: none;
+      opacity: 0;
+      background: rgba(255, 50, 50, 0.3);
+      mix-blend-mode: screen;
+      transition: opacity 0.1s;
+    }
+
+    /* --- MONSTER STYLES --- */
+    #monster-container {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 1; /* Inside Fog */
+      overflow: hidden;
+    }
+
+    .demogorgon {
+      position: absolute;
+      bottom: 0;
+      /* Silhouette Look */
+      filter: brightness(0) blur(1px); 
+      pointer-events: none;
+    }
+
+    /* 1. ROAMERS: Background walkers */
+    .demo-roam {
+      opacity: 0.15; /* Faint */
+      filter: brightness(0) blur(4px); /* Distance blur */
+      bottom: 5%;
+      height: 30vh;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
     }
     
+    @keyframes walkRight {
+      from { transform: translateX(-150px) scaleX(1); }
+      to { transform: translateX(110vw) scaleX(1); }
+    }
+    @keyframes walkLeft {
+      from { transform: translateX(110vw) scaleX(-1); }
+      to { transform: translateX(-150px) scaleX(-1); }
+    }
+
+    /* 2. JUMPSCARE: Foreground reveal */
+    .demo-jumpscare {
+      opacity: 0; /* Hidden by default */
+      filter: brightness(0) blur(0.5px);
+      transition: opacity 0.1s;
+      transform-origin: bottom center;
+    }
+    
+    /* Violent shake when revealed */
+    .jumpscare-active {
+      animation: scareShake 0.4s ease-out forwards;
+    }
+
+    @keyframes scareShake {
+      0% { transform: scale(0.9) translateY(20px); }
+      40% { transform: scale(1.1) translateY(-10px); }
+      60% { transform: scale(1.05) rotate(2deg); }
+      80% { transform: scale(1.05) rotate(-2deg); }
+      100% { transform: scale(1); }
+    }
+
+    /* --- FOG LAYERS --- */
+    .fog-container {
+      position: fixed; bottom: 0; left: 0; width: 100%; height: 100%;
+      z-index: 2; pointer-events: none;
+      overflow: hidden;
+    }
+
+    .fog-layer {
+      position: absolute; left: 0; width: 200%; height: 100%;
+      background-repeat: repeat-x;
+      background-size: 50% 100%;
+      opacity: 0.6;
+    }
+
+    .fog-1 {
+      bottom: -30%; height: 80%;
+      background-image: radial-gradient(circle at 50% 50%, rgba(50, 0, 0, 0.4), transparent 70%),
+                        linear-gradient(to top, rgba(20,0,0,0.9), transparent);
+      filter: blur(40px);
+      animation: fogRoll 30s linear infinite;
+    }
+
+    .fog-2 {
+      bottom: 0; height: 100%;
+      background: 
+        radial-gradient(ellipse at 20% 80%, rgba(80, 0, 0, 0.2), transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(80, 0, 0, 0.2), transparent 50%);
+      filter: blur(60px);
+      animation: fogRoll 20s linear infinite reverse;
+      opacity: 0.4;
+    }
+
+    .fog-3 {
+      bottom: -10%; height: 50%;
+      background: linear-gradient(90deg, transparent, rgba(100, 0, 0, 0.3), transparent);
+      filter: blur(20px);
+      animation: fogRoll 15s linear infinite;
+    }
+
+    @keyframes fogRoll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* --- PARTICLES --- */
+    #spores {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 3; overflow: hidden;
+    }
+    .spore {
+      position: absolute; 
+      background: rgba(200, 200, 200, 0.7);
+      border-radius: 50%; 
+      box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.3);
+      animation: floatUp linear infinite;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(105vh) translateX(0) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.5; }
+      100% { transform: translateY(-10vh) translateX(40px) rotate(180deg); opacity: 0; }
+    }
+    
+    /* --- MAIN UI --- */
+
     .wrapper { 
-      width: 95%; max-width: 900px; margin: 0 auto; padding: 30px;
-      background: rgba(15, 0, 0, 0.98); border: 4px solid #FF1744; 
-      border-radius: 8px; box-shadow: 0 0 80px #FF1744, inset 0 0 60px rgba(255, 23, 68, 0.1);
-      position: relative; min-height: 100vh; display: flex; flex-direction: column;
+      width: 100%; max-width: 900px; padding: 25px;
+      background: rgba(8, 0, 0, 0.85); 
+      border: 3px solid #FF1744; 
+      backdrop-filter: blur(5px);
+      border-radius: 8px; box-shadow: 0 0 60px #FF1744, inset 0 0 40px rgba(255, 23, 68, 0.15);
+      position: relative; display: flex; flex-direction: column;
+      z-index: 10; 
     }
     
+    .header-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 15px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    .title-box { text-align: left; }
+
     .title { 
-      text-align: center; font-size: clamp(2em, 5vw, 3.5em); color: #FF1744; 
-      text-shadow: 0 0 50px #FF1744, 0 0 100px #FF1744; margin-bottom: 15px; 
-      letter-spacing: 4px; animation: titlePulse 3s infinite;
-      padding: 0 10px;
+      font-size: clamp(1.5em, 4vw, 2.5em); color: #FF1744; 
+      text-shadow: 0 0 30px #FF1744; letter-spacing: 3px; 
+      margin-bottom: 5px; animation: titlePulse 3s infinite;
     }
+    .subtitle {
+      color: #FF5722; font-size: clamp(0.8em, 2vw, 1em); letter-spacing: 1px;
+    }
+
     @keyframes titlePulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.8; transform: scale(1.02); }
-    }
-    
-    .subtitle { 
-      text-align: center; color: #FF5722; font-size: clamp(1.1em, 3vw, 1.4em); 
-      text-shadow: 0 0 25px #FF5722; margin-bottom: 20px; letter-spacing: 2px;
-      padding: 0 10px;
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
     }
     
     .attempts-left {
-      text-align: center; background: rgba(139,0,0,0.9); padding: 15px;
-      border: 3px solid #FF1744; margin: 20px 0; border-radius: 10px;
-      box-shadow: 0 0 30px rgba(255,23,68,0.6);
+      background: rgba(139,0,0,0.4); padding: 10px 20px;
+      border: 2px solid #FF1744; border-radius: 8px;
+      text-align: center; min-width: 120px;
     }
     .attempts-left span {
-      font-size: clamp(2em, 6vw, 2.8em); color: #FF1744; text-shadow: 0 0 20px #FF1744;
-      font-weight: bold; display: block; animation: countdownBlink 1s infinite;
+      font-size: 2em; color: #FF1744; text-shadow: 0 0 15px #FF1744;
+      font-weight: bold; display: block; line-height: 1;
     }
-    @keyframes countdownBlink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0.4; }
-    }
-    
-    .input-field {
-      width: 100%; height: 70px; border: 4px solid #FF1744; border-radius: 12px;
-      background: rgba(0,0,0,1); color: #FF1744; font-size: clamp(1.2em, 4vw, 1.6em); 
-      padding: 0 25px; outline: none; text-shadow: 0 0 20px #FF1744; 
-      transition: all 0.3s; font-family: inherit; letter-spacing: 1px;
-      margin-bottom: 20px; box-shadow: inset 0 0 30px rgba(255,23,68,0.2);
-    }
-    .input-field:focus { 
-      border-color: #FF5722; box-shadow: 0 0 60px #FF5722, inset 0 0 40px rgba(255,87,34,0.3);
-      transform: scale(1.01);
-    }
-    
-    .typing-text {
-      height: 220px; background: rgba(8,0,0,0.95); border: 3px solid #FF1744; 
-      border-radius: 12px; padding: 25px; font-size: clamp(1.2em, 3.5vw, 1.6em); 
-      line-height: 1.8; overflow-y: auto; margin: 20px 0; 
-      box-shadow: inset 0 0 40px rgba(255,23,68,0.3);
-      min-height: 200px;
-    }
-    .typing-text span.correct { color: #FF1744; text-shadow: 0 0 25px #FF1744; }
-    .typing-text span.incorrect { 
-      color: #990000; background: rgba(153,0,0,0.7); animation: errorShake 0.4s; 
-      text-shadow: 0 0 10px #990000;
-    }
-    @keyframes errorShake {
-      0%, 100% { transform: translateX(0) rotate(0deg); }
-      25% { transform: translateX(-3px) rotate(-1deg); }
-      75% { transform: translateX(3px) rotate(1deg); }
-    }
-    .typing-text span.untouched { color: #666; }
-    
+    .attempts-label { font-size: 0.7em; color: #FF5722; margin-top: 5px; }
+
     .stats { 
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
-      gap: 20px; list-style: none; margin: 25px 0; padding: 0 10px;
+      display: grid; grid-template-columns: repeat(4, 1fr); 
+      gap: 10px; list-style: none; margin-bottom: 20px;
     }
     .stats li {
-      background: rgba(255,23,68,0.25); padding: 20px; border-radius: 12px; 
-      text-align: center; border: 3px solid rgba(255,23,68,0.6);
-      box-shadow: 0 0 25px rgba(255,23,68,0.4);
+      background: rgba(255,23,68,0.15); padding: 10px 5px; border-radius: 8px; 
+      text-align: center; border: 1px solid rgba(255,23,68,0.4);
     }
-    .stats p { color: #FF5722; font-size: clamp(0.9em, 2.5vw, 1em); margin-bottom: 8px; }
-    .stats span { font-size: clamp(1.8em, 5vw, 2.5em); font-weight: bold; color: #FF1744; text-shadow: 0 0 25px #FF1744; }
-    .accuracy { grid-column: 1 / -1; background: rgba(255,87,34,0.4); border-color: #FF5722; }
-    .accuracy span { color: #FF5722; text-shadow: 0 0 25px #FF5722; }
+    .stats p { color: #FF5722; font-size: 0.75em; margin-bottom: 5px; text-transform: uppercase; }
+    .stats span { font-size: 1.2em; font-weight: bold; color: #FF1744; text-shadow: 0 0 10px #FF1744; }
+    
+    .typing-text {
+      height: 150px; background: rgba(8,0,0,0.95); border: 2px solid #FF1744; 
+      border-radius: 8px; padding: 20px; font-size: 1.3em; 
+      line-height: 1.6; overflow-y: auto; margin-bottom: 20px;
+      box-shadow: inset 0 0 30px rgba(255,23,68,0.2);
+    }
+    .typing-text span.correct { color: #FF1744; text-shadow: 0 0 15px #FF1744; }
+    .typing-text span.incorrect { 
+      color: #990000; background: rgba(153,0,0,0.7); 
+      text-shadow: 0 0 5px #990000;
+    }
+    .typing-text span.untouched { color: #555; }
+    
+    .input-field {
+      width: 100%; height: 50px; border: 2px solid #FF1744; border-radius: 8px;
+      background: rgba(0,0,0,1); color: #FF1744; font-size: 1.2em; 
+      padding: 0 15px; outline: none; transition: all 0.3s; 
+      margin-bottom: 20px; box-shadow: inset 0 0 20px rgba(255,23,68,0.2);
+    }
+    .input-field:focus { border-color: #FF5722; box-shadow: 0 0 30px #FF5722; }
     
     .btn {
-      width: 100%; padding: 22px; background: linear-gradient(45deg, #FF1744, #CC0000); 
-      color: white; border: none; border-radius: 15px; font-size: clamp(1.2em, 3.5vw, 1.5em); 
-      font-weight: bold; cursor: pointer; transition: all 0.4s; text-transform: uppercase; 
-      letter-spacing: 3px; font-family: inherit; text-shadow: 0 0 15px #FF1744;
-      box-shadow: 0 0 30px rgba(255,23,68,0.5); margin-top: auto;
+      width: 100%; padding: 15px; background: linear-gradient(45deg, #FF1744, #CC0000); 
+      color: white; border: none; border-radius: 8px; font-size: 1.2em; 
+      font-weight: bold; cursor: pointer; transition: all 0.3s; 
+      text-transform: uppercase; letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
     .btn:hover { 
-      transform: translateY(-5px) scale(1.02); 
-      box-shadow: 0 20px 50px rgba(255,23,68,0.8);
+      transform: translateY(-2px); 
       background: linear-gradient(45deg, #FF5722, #FF1744);
     }
     
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.98); z-index: 1000; justify-content: center; align-items: center;
-      padding: 20px;
+      background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center;
+      padding: 10px;
     }
     .modal-content {
-      background: linear-gradient(135deg, #300000, #500000); border: 5px solid #FF1744;
-      padding: 50px 40px; border-radius: 20px; text-align: center; max-width: 95vw;
-      max-height: 90vh; overflow-y: auto; box-shadow: 0 0 100px rgba(255,23,68,0.9);
-      position: relative; width: 100%;
+      background: linear-gradient(135deg, #200000, #400000); border: 3px solid #FF1744;
+      padding: 30px; border-radius: 15px; text-align: center; width: 100%; max-width: 500px;
+      box-shadow: 0 0 60px rgba(255,23,68,0.6); position: relative;
     }
-    .modal-content::before {
-      content: 'Anamigay'; position: absolute; top: 15px; right: 25px;
-      font-size: 12px; color: rgba(255,255,255,0.6); font-family: 'Courier New', monospace;
-      letter-spacing: 2px; text-shadow: 0 0 8px rgba(255,255,255,0.8); z-index: 10;
-      font-weight: bold;
-    }
-    .keycode {
-      font-size: clamp(4em, 12vw, 7em); font-family: 'Courier New', monospace; 
-      background: rgba(0,0,0,0.95); color: #00FF88; padding: 25px 30px; 
-      border: 5px solid #00FF88; border-radius: 15px; margin: 30px 0; 
-      text-shadow: 0 0 50px #00FF88; letter-spacing: clamp(8px, 2vw, 15px);
-      box-shadow: 0 0 80px #00FF88; animation: victoryPulse 1.5s infinite;
-      max-width: 90%;
-    }
-    @keyframes victoryPulse {
-      0%, 100% { box-shadow: 0 0 80px #00FF88; transform: scale(1); }
-      50% { box-shadow: 0 0 120px #00FF88; transform: scale(1.03); }
+    .modal-content.victory::before {
+      content: 'Gatekeeper'; position: absolute; top: 10px; right: 15px;
+      font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 1px;
     }
     
-    @media (max-width: 768px) {
-      .wrapper { padding: 20px; margin: 5px; }
-      .typing-text { height: 180px; padding: 20px; }
-      .stats { gap: 15px; }
-      .stats li { padding: 15px; }
-      .modal-content { padding: 30px 20px; margin: 10px; }
+    .modal h2 { font-size: 2em; margin-bottom: 15px; }
+    
+    .keycode {
+      font-size: 2.5em; 
+      background: rgba(0,0,0,0.8); color: #00FF88; padding: 15px; 
+      border: 3px solid #00FF88; border-radius: 10px; margin: 20px auto; 
+      text-shadow: 0 0 20px #00FF88; letter-spacing: 5px;
+      display: inline-block;
+      animation: victoryPulse 1.5s infinite;
+    }
+    @keyframes victoryPulse {
+      0%, 100% { box-shadow: 0 0 30px #00FF88; transform: scale(1); }
+      50% { box-shadow: 0 0 50px #00FF88; transform: scale(1.02); }
+    }
+    
+    @media (max-width: 600px) {
+      .header-grid { grid-template-columns: 1fr; text-align: center; }
+      .title-box { text-align: center; }
     }
   </style>
 </head>
 <body>
+
+  <audio id="bgMusic" loop>
+    <source src="bg.mp3" type="audio/mpeg">
+  </audio>
+
+  <div id="lightning-overlay"></div>
+
+  <div id="monster-container"></div>
+
+  <div class="fog-container">
+    <div class="fog-layer fog-1"></div>
+    <div class="fog-layer fog-2"></div>
+    <div class="fog-layer fog-3"></div>
+  </div>
+
+  <div id="spores"></div>
+
   <div class="wrapper">
-    <h1 class="title">STRANGER THINGS</h1>
-    <h2 class="subtitle">ONLY 5 ATTEMPTS TO ESCAPE</h2>
-    
-    <div class="attempts-left">
-      <span id="attemptsLeft">5</span>
-      <div style="font-size: clamp(1em, 3vw, 1.1em); color: #FF5722; margin-top: 8px;">ATTEMPTS REMAINING</div>
+    <div class="header-grid">
+      <div class="title-box">
+        <h1 class="title">STRANGER THINGS</h1>
+        <h2 class="subtitle">ESCAPE OR PERISH</h2>
+      </div>
+      <div class="attempts-left">
+        <span id="attemptsLeft">5</span>
+        <div class="attempts-label">ATTEMPTS</div>
+      </div>
     </div>
-    
-    <input type="text" class="input-field" id="input" placeholder="TYPE OR PERISH - NO COPY/PASTE" readonly>
-    
-    <div class="typing-text" id="quote"></div>
-    
+
     <ul class="stats">
-      <li><p>Time</p><span id="timer">60s</span></li>
+      <li><p>Time</p><span id="timer">90s</span></li>
       <li><p>Errors</p><span id="errors">0</span></li>
       <li><p>WPM</p><span id="wpm">0</span></li>
-      <li><p>CPM</p><span id="cpm">0</span></li>
       <li class="accuracy"><p>Accuracy</p><span id="accuracy">100%</span></li>
     </ul>
     
+    <div class="typing-text" id="quote"></div>
+    <input type="text" class="input-field" id="input" placeholder="TYPE HERE TO BEGIN..." autocomplete="off">
     <button class="btn" id="startBtn" onclick="init()">RISK ESCAPE</button>
   </div>
 
   <div class="modal" id="modal">
     <div class="modal-content">
-      <h2 id="modalTitle" style="color: #FF1744; margin-bottom: 25px; font-size: clamp(2em, 6vw, 2.5em);">FAILED</h2>
-      <div class="final-stats" style="margin: 25px 0; font-size: clamp(1.1em, 3vw, 1.4em);">
-        <div><strong>Final WPM:</strong> <span id="finalWPM">0</span></div>
-        <div><strong>Final Accuracy:</strong> <span id="finalAccuracy">0%</span></div>
+      <h2 id="modalTitle">FAILED</h2>
+      
+      <div style="margin: 20px 0; font-size: 1.1em; color: #fff;">
+        <div>Final WPM: <span id="finalWPM" style="color:#FF1744; font-weight:bold;">0</span></div>
+        <div>Accuracy: <span id="finalAccuracy" style="color:#FF1744; font-weight:bold;">0%</span></div>
       </div>
+
       <div class="keycode" id="code" style="display: none;">ESCAPE GRANTED</div>
-      <p id="modalText" style="color: #FF5722; margin: 30px 0; font-size: clamp(1.1em, 3vw, 1.3em);">YOU ARE DOOMED</p>
-      <button class="btn" id="nextBtn" onclick="init()" style="width: 100%; max-width: 300px;">DESPERATE ATTEMPT</button>
+      
+      <p id="modalText" style="color: #FF5722; margin: 20px 0; font-size: 1em;">YOU ARE DOOMED</p>
+      <button class="btn" id="retryBtn" onclick="init()" style="padding: 12px;">TRY AGAIN</button>
     </div>
   </div>
 
   <script>
-    const quote = "Friends dont lie Eleven Upside Down Demogorgon Hawkins Lab Eggos Mind Flayer";
+    // --- ROBUST AUDIO STARTER ---
+    const bgAudio = document.getElementById('bgMusic');
+    bgAudio.volume = 1.0; 
+    
+    function startMusic() {
+      // Standard Play - works best across all browsers
+      bgAudio.play().then(() => {
+        document.removeEventListener('click', startMusic);
+        document.removeEventListener('keydown', startMusic);
+      }).catch(err => {
+        console.log("Audio waiting for user interaction.");
+      });
+    }
+    document.addEventListener('click', startMusic);
+    document.addEventListener('keydown', startMusic);
+
+    // --- 1. ROAMING BACKGROUND MONSTERS ---
+    function spawnRoamingMonsters() {
+      const container = document.getElementById('monster-container');
+      const monsterImg = 'demogorgon.png'; 
+
+      // Spawn 5 Background Walkers
+      for(let i=0; i<5; i++) {
+        const img = document.createElement('img');
+        img.src = monsterImg;
+        img.className = 'demogorgon demo-roam';
+        
+        // Randomize direction and speed
+        const duration = Math.random() * 20 + 30 + 's'; // Slow walk
+        const delay = Math.random() * -30 + 's'; // Start at different times
+        const direction = Math.random() > 0.5 ? 'walkRight' : 'walkLeft';
+        
+        img.style.animationName = direction;
+        img.style.animationDuration = duration;
+        img.style.animationDelay = delay;
+        
+        // Random size/depth
+        img.style.height = (25 + Math.random() * 25) + 'vh'; 
+        
+        container.appendChild(img);
+      }
+    }
+    spawnRoamingMonsters();
+
+    // --- 2. RANDOM LIGHTNING & JUMPSCARE SYSTEM ---
+    const lightningOverlay = document.getElementById('lightning-overlay');
+    const monsterContainer = document.getElementById('monster-container');
+
+    function triggerRandomLightning() {
+      // Random interval between strikes (0.5s to 7s)
+      const nextStrike = Math.random() * 6500 + 500;
+      
+      // Random intensity
+      const intensity = Math.random();
+      
+      if (intensity > 0.7) {
+        // --- BIG FLASH (JUMPSCARE) ---
+        lightningOverlay.style.opacity = '0.9';
+        lightningOverlay.style.background = 'rgba(255, 150, 150, 0.7)';
+        
+        triggerJumpscare(); 
+        
+        // Flash cleanup
+        setTimeout(() => { lightningOverlay.style.opacity = '0'; }, 150); 
+        setTimeout(() => { lightningOverlay.style.opacity = '0.3'; }, 200); // Aftershock
+        setTimeout(() => { lightningOverlay.style.opacity = '0'; }, 300);
+
+      } else {
+        // --- SMALL FLASH (AMBIENCE) ---
+        lightningOverlay.style.opacity = '0.3';
+        lightningOverlay.style.background = 'rgba(255, 50, 50, 0.2)';
+        setTimeout(() => { lightningOverlay.style.opacity = '0'; }, 100);
+      }
+
+      setTimeout(triggerRandomLightning, nextStrike);
+    }
+
+    function triggerJumpscare() {
+      // Create temporary monster element
+      const img = document.createElement('img');
+      img.src = 'demogorgon.png';
+      img.className = 'demogorgon demo-jumpscare jumpscare-active';
+      
+      // Position: Side bias to avoid covering center text
+      const side = Math.random() > 0.5 ? 'left' : 'right';
+      const offset = Math.random() * 20; // 0-20% from edge
+      img.style.left = side === 'left' ? offset + '%' : (80 + offset) + '%'; 
+      
+      // Massive size for jumpscare
+      img.style.height = (65 + Math.random() * 30) + 'vh'; 
+      img.style.opacity = '1';
+      
+      monsterContainer.appendChild(img);
+
+      // Remove after flash ends
+      setTimeout(() => {
+        img.style.opacity = '0';
+        setTimeout(() => img.remove(), 500); 
+      }, 400); 
+    }
+
+    // Start Lightning Loop
+    triggerRandomLightning();
+
+
+    // --- PARTICLES ---
+    function createSpores() {
+      const sporeContainer = document.getElementById('spores');
+      const sporeCount = 30; 
+      for(let i=0; i<sporeCount; i++) {
+        const spore = document.createElement('div');
+        spore.classList.add('spore');
+        const size = Math.random() * 4 + 2 + 'px';
+        spore.style.width = size; spore.style.height = size;
+        spore.style.left = Math.random() * 100 + '%';
+        spore.style.animationDuration = Math.random() * 8 + 8 + 's';
+        spore.style.animationDelay = Math.random() * 5 + 's';
+        sporeContainer.appendChild(spore);
+      }
+    }
+    createSpores();
+
+    // --- GAME LOGIC ---
+    const quote = "Every mind has a weakness and every fear has a door. Once the door is open the darkness spreads. Time is running out and if you dont act now the Upside Down will take everything you love.";
     const chars = quote.split('');
     const totalChars = chars.length;
+    const totalTime = 90;
+    const MAX_ERRORS = 5;
     
-    let time = 60;
+    let time = totalTime;
     let timerId = null;
     let currentErrors = 0;
+    let totalMistakes = 0; 
     let gameRunning = false;
     let gameEnded = false;
     let startTime = 0;
     let attemptsLeft = 5;
-    
+    let lastInputLen = 0; 
+
     const input = document.getElementById('input');
     const quoteEl = document.getElementById('quote');
     
     ['paste', 'copy', 'cut', 'dragstart', 'selectstart', 'contextmenu', 'drop'].forEach(event => {
       input.addEventListener(event, e => e.preventDefault());
     });
-    document.addEventListener('keydown', e => {
-      if (e.ctrlKey && (e.key === 'a' || e.key === 'c' || e.key === 'v' || e.key === 'x')) {
-        e.preventDefault();
-      }
-      if (e.key === 'F12') e.preventDefault();
-    });
     
     function init() {
-      time = 60;
+      time = totalTime;
       currentErrors = 0;
+      totalMistakes = 0;
+      lastInputLen = 0;
       gameRunning = false;
       gameEnded = false;
+      
       input.value = '';
       input.readOnly = false;
       document.getElementById('modal').style.display = 'none';
+      document.getElementById('retryBtn').style.display = 'inline-block';
       
+      document.querySelector('.modal-content').classList.remove('victory'); 
+      document.getElementById('code').style.display = 'none'; 
+      document.getElementById('modalTitle').textContent = ''; 
+
       quoteEl.innerHTML = '';
       chars.forEach((char, i) => {
         const span = document.createElement('span');
@@ -243,13 +521,13 @@
       });
       
       updateDisplay();
+      document.getElementById('timer').textContent = time + 's';
       document.getElementById('attemptsLeft').textContent = attemptsLeft;
       input.focus();
-      document.getElementById('startBtn').textContent = 'RISK ESCAPE';
     }
     
     input.addEventListener('input', () => {
-      if (gameEnded || input.readOnly || currentErrors > 10) return;
+      if (gameEnded || input.readOnly) return;
       
       if (!gameRunning) {
         gameRunning = true;
@@ -258,8 +536,18 @@
       }
       
       const typed = input.value;
-      currentErrors = 0;
       
+      if (typed.length > lastInputLen) {
+          const charIndex = typed.length - 1;
+          if (charIndex < chars.length) {
+              if (typed[charIndex] !== chars[charIndex]) {
+                  totalMistakes++;
+              }
+          }
+      }
+      lastInputLen = typed.length;
+      
+      currentErrors = 0;
       chars.forEach((char, i) => {
         const span = document.getElementById(`char-${i}`);
         if (i < typed.length) {
@@ -274,7 +562,7 @@
         }
       });
       
-      if (typed.length >= totalChars || time <= 0 || currentErrors > 10) {
+      if (typed.length >= totalChars || time <= 0 || totalMistakes > MAX_ERRORS) {
         endGame();
       }
       
@@ -286,7 +574,7 @@
       timerId = setInterval(() => {
         time--;
         document.getElementById('timer').textContent = time + 's';
-        if (time <= 0 || currentErrors > 10) {
+        if (time <= 0 || totalMistakes > MAX_ERRORS) {
           endGame();
         }
         updateDisplay();
@@ -303,51 +591,70 @@
       }
       input.readOnly = true;
       
-      const elapsed = Math.max(1, Math.round((Date.now() - startTime) / 1000));
-      const finalWPM = Math.round((input.value.length / 5) * (60 / elapsed));
-      const accuracy = input.value.length > 0 ? Math.round(((input.value.length - currentErrors) / input.value.length) * 100) : 0;
+      const elapsed = Math.max(1, (totalTime - time)); 
+      const typedLength = input.value.length;
+      const wpm = Math.round((typedLength / 5) / (elapsed / 60));
+      const finalWPM = wpm < 0 || !wpm || wpm === Infinity ? 0 : wpm;
+      const accuracy = typedLength > 0 ? Math.round(((typedLength - totalMistakes) / typedLength) * 100) : 0;
       
       document.getElementById('finalWPM').textContent = finalWPM;
       document.getElementById('finalAccuracy').textContent = accuracy + '%';
       
-      const validRun = currentErrors <= 10;
+      const validErrors = totalMistakes <= MAX_ERRORS;
+      const validTime = time > 0;
+      const completedText = typedLength >= totalChars;
       
-      if (!validRun) {
-        document.getElementById('modalTitle').textContent = 'DISCARDED - TOO MANY ERRORS';
+      document.getElementById('code').style.display = 'none';
+      document.querySelector('.modal-content').classList.remove('victory');
+      
+      if (!validErrors) {
+        document.getElementById('modalTitle').textContent = 'DISCARDED';
         document.getElementById('modalTitle').style.color = '#666';
-        document.getElementById('modalText').textContent = 'Maximum 10 errors allowed. START OVER.';
-      } else if (finalWPM >= 35 && accuracy >= 95) {
+        document.getElementById('modalText').textContent = `Too many errors (Max ${MAX_ERRORS}).`;
+        attemptsLeft--;
+      } else if (!validTime) {
+         document.getElementById('modalTitle').textContent = 'DEVOURED';
+         document.getElementById('modalTitle').style.color = '#cb3439';
+         document.getElementById('modalText').textContent = 'Time ran out.';
+         attemptsLeft--;
+      } else if (!completedText) {
+         document.getElementById('modalTitle').textContent = 'FAILED';
+         document.getElementById('modalText').textContent = 'Incomplete transmission.';
+         attemptsLeft--;
+      } else if (finalWPM >= 30 && accuracy >= 95) { 
+        document.querySelector('.modal-content').classList.add('victory');
         document.getElementById('code').style.display = 'block';
-        document.getElementById('code').textContent = 'ESCAPE GRANTED';
-        document.getElementById('modalTitle').textContent = 'VICTORY - YOU ESCAPED!';
+        document.getElementById('modalTitle').textContent = 'VICTORY';
         document.getElementById('modalTitle').style.color = '#00FF88';
-        document.getElementById('modalText').innerHTML = 'The Upside Down cannot hold you. Freedom achieved.';
-        attemptsLeft = 5;
+        document.getElementById('modalText').innerHTML = 'The Upside Down cannot hold you.';
+        attemptsLeft = 5; 
       } else {
         attemptsLeft--;
-        document.getElementById('modalTitle').textContent = 'TRAPPED FOREVER';
+        document.getElementById('modalTitle').textContent = 'TRAPPED';
+        document.getElementById('modalTitle').style.color = '#FF5722';
         document.getElementById('modalText').innerHTML = 
-          `Attempts left: ${attemptsLeft}<br>Need 35+ WPM & 95%+ accuracy (≤10 errors)`;
-        
-        if (attemptsLeft <= 2) {
-          document.getElementById('modalText').innerHTML += '<br><strong>YOUR TIME IS RUNNING OUT</strong>';
-        }
+          `Speed/Accuracy too low.<br>Req: 30 WPM, 95% Acc.<br>Attempts left: ${attemptsLeft}`;
       }
       
+      if (attemptsLeft <= 0) {
+          document.getElementById('modalText').innerHTML += '<br><strong style="color:red">GAME OVER - REFRESH TO RESET</strong>';
+          document.getElementById('retryBtn').style.display = 'none'; 
+      }
+
       setTimeout(() => {
         document.getElementById('modal').style.display = 'flex';
-      }, 600);
+      }, 500);
     }
     
     function updateDisplay() {
-      const elapsed = gameRunning ? Math.round((Date.now() - startTime) / 1000) : 0;
-      const cpm = elapsed > 0 ? Math.round(input.value.length * 60 / elapsed) : 0;
-      const wpm = elapsed > 0 ? Math.round((input.value.length / 5) * 60 / elapsed) : 0;
-      const accuracy = input.value.length > 0 ? Math.round(((input.value.length - currentErrors) / input.value.length) * 100) : 100;
+      const elapsed = Math.max(1, (totalTime - time));
+      const typedLength = input.value.length;
+      const wpm = Math.round((typedLength / 5) / (elapsed / 60));
+      const displayWPM = wpm < 0 || !wpm || wpm === Infinity ? 0 : wpm;
+      const accuracy = typedLength > 0 ? Math.round(((typedLength - totalMistakes) / typedLength) * 100) : 100;
       
-      document.getElementById('errors').textContent = currentErrors;
-      document.getElementById('cpm').textContent = cpm;
-      document.getElementById('wpm').textContent = wpm;
+      document.getElementById('errors').textContent = totalMistakes;
+      document.getElementById('wpm').textContent = displayWPM;
       document.getElementById('accuracy').textContent = accuracy + '%';
     }
     
@@ -355,4 +662,3 @@
   </script>
 </body>
 </html>
-
